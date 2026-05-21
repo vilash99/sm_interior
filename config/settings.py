@@ -65,19 +65,9 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-            # 'ENGINE': 'django.db.backends.postgresql', # for postgresql
-            'ENGINE': 'django.db.backends.mysql', # my mysql
-            'NAME': config('DB_NAME'),
-            'USER': config('DB_USER'),
-            'PASSWORD': config('DB_PASSWORD'),
-            'HOST': config('DB_HOST'),
-            'PORT': config('DB_PORT'),
-
-            # Only for MySQL
-            'OPTIONS': {
-                'charset': 'utf8mb4',
-            },
-        }
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
 
 # Password validation

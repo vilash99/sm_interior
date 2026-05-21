@@ -1,0 +1,417 @@
+{% extends "_base.html" %}
+{% load humanize %}
+
+
+{% block title %}
+{% if object %} Edit Sell Invoice {% else %} Create Sell Invoice {% endif %}
+{% endblock title %}
+
+{% block page_title %}
+{% if object %} Edit Sell Invoice {% else %} Create Sell Invoice {% endif %}
+{% endblock page_title %}
+
+{% block page_subtitle %}
+Manage invoice details and add invoice items one by one.
+{% endblock page_subtitle %}
+
+{% block content %}
+<div class="py-2 space-y-6">
+  {% if not object or request.GET.edit_invoice %}
+    <div class="bg-white shadow-sm border border-gray-200 rounded-lg p-6">
+      <div class="flex items-start justify-between gap-4 mb-5">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900">
+            {% if object %}Edit Invoice Details{% else %}Create Invoice{% endif %}
+          </h2>
+          <p class="text-sm text-gray-500">
+            {% if object %}
+              Update the invoice header details here.
+            {% else %}
+              Enter invoice details first, then add invoice items.
+            {% endif %}
+          </p>
+        </div>
+
+        {% if object %}
+          <a href="{% url 'sales:sell_invoice_edit' object.pk %}"
+             class="px-4 py-2 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-md transition">
+            Cancel
+          </a>
+        {% endif %}
+      </div>
+
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="action" value="save_invoice">
+
+        {% if form.non_field_errors %}
+          <p class="text-red-600 text-sm mb-4">
+            {{ form.non_field_errors }}
+          </p>
+        {% endif %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="{{ form.customer.id_for_label }}"
+                   class="block text-sm font-medium text-gray-700 mb-1">
+              Customer
+            </label>
+            {{ form.customer }}
+            {% for err in form.customer.errors %}
+              <p class="text-xs text-red-600 mt-1">{{ err }}</p>
+            {% endfor %}
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Invoice Number
+            </label>
+            <div class="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-sm text-gray-900">
+              {% if object %}
+                {{ object.invoice_number }}
+              {% else %}
+                Auto generated after save
+              {% endif %}
+            </div>
+          </div>
+
+          <div>
+            <label for="{{ form.invoice_date.id_for_label }}"
+                   class="block text-sm font-medium text-gray-700 mb-1">
+              Invoice Date
+            </label>
+            {{ form.invoice_date }}
+            {% for err in form.invoice_date.errors %}
+              <p class="text-xs text-red-600 mt-1">{{ err }}</p>
+            {% endfor %}
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Current Total
+            </label>
+            <div class="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-sm text-gray-900">
+              {% if object %}
+                ₹ {{ object.grand_total|floatformat:2|intcomma }}
+              {% else %}
+                ₹ 0.00
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="md:col-span-2">
+            <label for="{{ form.notes.id_for_label }}"
+                   class="block text-sm font-medium text-gray-700 mb-1">
+              Notes
+            </label>
+            {{ form.notes }}
+            {% for err in form.notes.errors %}
+              <p class="text-xs text-red-600 mt-1">{{ err }}</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        <button type="submit"
+                class="w-full mt-6 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-md font-medium transition">
+          {% if object %} Update Invoice {% else %} Create Invoice {% endif %}
+        </button>
+      </form>
+    </div>
+  {% elif object %}
+    <div class="bg-white shadow-sm border border-gray-200 rounded-xl p-6">
+      <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+        <div class="flex-1">
+          <h2 class="text-lg font-semibold text-gray-900 mb-5">Invoice Summary</h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="space-y-1">
+              <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Customer</p>
+              <p class="text-base font-semibold text-gray-900">{{ object.customer.name }}</p>
+            </div>
+
+            <div class="space-y-1">
+              <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Invoice Number</p>
+              <p class="text-base font-semibold text-gray-900">{{ object.invoice_number }}</p>
+            </div>
+
+            <div class="space-y-1">
+              <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Invoice Date</p>
+              <p class="text-base font-semibold text-gray-900">{{ object.invoice_date|date:"d / m / Y" }}</p>
+            </div>
+
+            <div class="space-y-1">
+              <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Notes</p>
+              <p class="text-base font-semibold text-gray-900">{{ object.notes|default:"-" }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:w-72 lg:border-l lg:border-gray-200 lg:pl-6 flex flex-col items-start lg:items-end gap-4">
+          <div class="text-left lg:text-right">
+            <p class="text-sm text-gray-500">Grand Total</p>
+            <p class="text-3xl font-bold text-gray-900">₹{{ object.grand_total|floatformat:2|intcomma }}</p>
+          </div>
+
+          <a href="{% url 'sales:sell_invoice_edit' object.pk %}?edit_invoice=1"
+             class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-md transition">
+            Edit invoice details
+          </a>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+    <div class="xl:col-span-4">
+      <div class="bg-white shadow-sm border border-gray-200 rounded-xl p-6">
+        <div class="mb-5">
+          <h2 class="text-lg font-semibold text-gray-900">
+            {% if editing_invoice_item %}Update Invoice Item{% else %}Add Invoice Item{% endif %}
+          </h2>
+          <p class="text-sm text-gray-500">
+            Select an item, update price if needed, and add it to the invoice.
+          </p>
+        </div>
+
+        {% if object %}
+          <form method="post" novalidate class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="save_invoice_item">
+            {% if editing_invoice_item %}
+              <input type="hidden" name="invoice_item_id" value="{{ editing_invoice_item.pk }}">
+            {% endif %}
+
+            <div>
+              <label for="{{ invoice_item_form.item.id_for_label }}"
+                     class="block text-sm font-medium text-gray-700 mb-1">
+                Item
+              </label>
+              {{ invoice_item_form.item }}
+              {% for err in invoice_item_form.item.errors %}
+                <p class="text-xs text-red-600 mt-1">{{ err }}</p>
+              {% endfor %}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="{{ invoice_item_form.price.id_for_label }}"
+                       class="block text-sm font-medium text-gray-700 mb-1">
+                  MRP
+                </label>
+                {{ invoice_item_form.price }}
+                {% for err in invoice_item_form.price.errors %}
+                  <p class="text-xs text-red-600 mt-1">{{ err }}</p>
+                {% endfor %}
+              </div>
+
+              <div>
+                <label for="{{ invoice_item_form.quantity.id_for_label }}"
+                       class="block text-sm font-medium text-gray-700 mb-1">
+                  Quantity
+                </label>
+                {{ invoice_item_form.quantity }}
+                {% for err in invoice_item_form.quantity.errors %}
+                  <p class="text-xs text-red-600 mt-1">{{ err }}</p>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div class="rounded-lg border border-gray-200 bg-slate-50 p-4">
+              <p class="text-sm text-gray-500 mb-1">Line Total</p>
+              <input type="text"
+                     id="display-line-total"
+                     value=""
+                     readonly
+                     class="w-full border-0 bg-transparent p-0 text-3xl font-bold text-gray-900 focus:ring-0">
+            </div>
+
+            <button type="submit"
+                    class="w-full py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-md font-medium transition">
+              {% if editing_invoice_item %}Update item{% else %}Add item to invoice{% endif %}
+            </button>
+
+            {% if editing_invoice_item %}
+              <a href="{% url 'sales:sell_invoice_edit' object.pk %}"
+                 class="block text-center px-4 py-2 border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-md transition">
+                Cancel
+              </a>
+            {% endif %}
+          </form>
+
+          <div class="mt-6 rounded-lg border border-blue-100 bg-blue-50 p-4">
+            <p class="text-sm font-medium text-blue-900">Tip</p>
+            <p class="mt-1 text-sm text-blue-800">
+              After adding an item, it will appear in the list on the right.
+            </p>
+          </div>
+        {% else %}
+          <div class="rounded-lg border border-dashed border-gray-300 p-5 text-sm text-gray-500">
+            Save the invoice first, then you can add invoice items here one at a time.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="xl:col-span-8">
+      <div class="bg-white shadow-sm border border-gray-200 rounded-xl p-6">
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-5">
+          <div>
+            <h2 class="text-lg font-semibold text-gray-900">Items Added</h2>
+            <p class="text-sm text-gray-500">
+              {% if object %}
+                {{ invoice_items|length }} item{{ invoice_items|length|pluralize }} in this invoice
+              {% else %}
+                Items will appear here after invoice creation.
+              {% endif %}
+            </p>
+          </div>
+
+          {% if object %}
+            <div class="text-left sm:text-right">
+              <p class="text-sm text-gray-500">Grand Total</p>
+              <p class="text-2xl font-bold text-gray-900">₹{{ object.grand_total|floatformat:2|intcomma }}</p>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="border border-gray-200 rounded-lg overflow-hidden">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">#</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Item</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">MRP</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Quantity</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Line Total</th>
+                <th class="px-4 py-3 text-right text-xs font-medium text-gray-600 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 bg-white">
+              {% for invoice_item in invoice_items %}
+                <tr class="hover:bg-gray-50 transition">
+                  <td class="px-4 py-3 text-sm text-gray-900">{{ forloop.counter }}</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">{{ invoice_item.item.name }}</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">{{ invoice_item.price }}</td>
+                  <td class="px-4 py-3 text-sm text-gray-900">{{ invoice_item.quantity }}</td>
+                  <td class="px-4 py-3 text-sm font-semibold text-gray-900">{{ invoice_item.line_total }}</td>
+                  <td class="px-4 py-3 text-sm">
+                    <div class="flex justify-end gap-3">
+                      <a href="{% url 'sales:sell_invoice_edit' object.pk %}?edit_item={{ invoice_item.pk }}"
+                         class="text-gray-700 hover:text-gray-900 hover:underline">
+                        Edit
+                      </a>
+
+                      <form method="post" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete_invoice_item">
+                        <input type="hidden" name="invoice_item_id" value="{{ invoice_item.pk }}">
+                        <button type="submit"
+                                class="text-red-600 hover:text-red-700 hover:underline"
+                                onclick="return confirm('Delete this invoice item?');">
+                          Delete
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="6" class="px-4 py-8 text-center text-sm text-gray-500">
+                    No invoice items added yet.
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% if object %}
+          <div class="mt-5 rounded-lg border border-gray-200 bg-slate-50 p-5">
+            <div class="flex items-center justify-between text-sm text-gray-700">
+              <span>Subtotal</span>
+              <span class="font-semibold text-gray-900">₹{{ object.subtotal|floatformat:2|intcomma }}</span>
+            </div>
+            <div class="mt-3 flex items-center justify-between text-lg font-semibold text-gray-900">
+              <span>Grand Total</span>
+              <span>₹{{ object.grand_total|floatformat:2|intcomma }}</span>
+            </div>
+          </div>
+          <div class="mt-5 rounded-lg border border-gray-200 bg-white p-5">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <p class="text-lg font-semibold text-gray-900">Ready to print?</p>
+                <p class="text-sm text-gray-500">
+                  Preview the invoice in a clean printable page before printing.
+                </p>
+              </div>
+
+              <a href="{% url 'sales:sell_invoice_preview' object.pk %}"
+                 class="inline-flex items-center justify-center px-4 py-2 border border-blue-600 bg-blue-600 hover:bg-blue-500 text-gray-100 text-medium font-medium rounded-md transition">
+                Preview Invoice
+              </a>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ item_price_map|json_script:"item-price-map" }}
+
+<script>
+  (function() {
+    const priceMapElement = document.getElementById("item-price-map");
+    const itemSelect = document.getElementById("id_item");
+    const priceInput = document.getElementById("id_price");
+    const quantityInput = document.getElementById("id_quantity");
+    const totalField = document.getElementById("display-line-total");
+
+    if (!priceMapElement || !itemSelect || !priceInput || !quantityInput || !totalField) {
+      return;
+    }
+
+    const priceMap = JSON.parse(priceMapElement.textContent);
+
+    function formatAmount(value) {
+      if (!value || Number.isNaN(value)) {
+        return "0.00";
+      }
+
+      return Number(value).toFixed(2);
+    }
+
+    function syncPriceFromSelectedItem() {
+      priceInput.value = formatAmount(parseFloat(priceMap[itemSelect.value] || 0));
+      updatePreview();
+    }
+
+    function updatePreview() {
+      const itemPrice = parseFloat(priceInput.value || 0);
+      const quantity = parseFloat(quantityInput.value || 0);
+      totalField.value = formatAmount(itemPrice * quantity);
+    }
+
+    itemSelect.addEventListener("change", syncPriceFromSelectedItem);
+    priceInput.addEventListener("input", updatePreview);
+    quantityInput.addEventListener("input", updatePreview);
+    updatePreview();
+  })();
+</script>
+
+<script>
+  $("#id_customer").select2({
+    placeholder: "Select Customer",
+    allowClear: true
+  });
+
+  $("#id_item").select2({
+    placeholder: "Select Item",
+    allowClear: true
+  });
+
+  $("#id_item").on("select2:select select2:clear", function () {
+    this.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+</script>
+{% endblock content %}

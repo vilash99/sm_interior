@@ -1,0 +1,37 @@
+# Virtual Environment
+.venv/
+
+# Environment variable
+.env
+
+# Cache files
+__pycache__/
+
+# For tailwind CSS formatting
+node_modules/
+tailwind.config.js
+static/css/input.css
+
+# database
+*.sqlite3
+
+# Some Text file
+credentials.txt
+instructions.txt
+
+
+# Admin CSS
+static/admin/
+*.sql
+*.pdf
+*.csv
+
+# Celery temporary files
+*.bak
+*.dat
+*.dir
+
+
+# Other files
+*.json
+docker-compose.yml

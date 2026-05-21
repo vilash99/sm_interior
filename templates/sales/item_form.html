@@ -1,0 +1,76 @@
+{% extends "_base.html" %}
+
+{% block title %}
+{% if object %} Edit Item {% else %} Create Item {% endif %}
+{% endblock title %}
+
+{% block page_title %}
+{% if object %} Edit Item {% else %} Create Item {% endif %}
+{% endblock page_title %}
+
+{% block page_subtitle %}
+Create new items and update existing ones.
+{% endblock page_subtitle %}
+
+{% block content %}
+
+<div class="flex justify-center items-start py-10">
+  <div class="w-full max-w-xl bg-white shadow-sm border border-gray-200 rounded-lg p-6">
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <p class="text-red-600 text-sm mb-4">
+          {{ form.non_field_errors }}
+        </p>
+      {% endif %}
+
+      <div class="mb-4">
+        <label for="{{ form.name.id_for_label }}"
+               class="block text-sm font-medium text-gray-700 mb-1">
+          Item Name
+        </label>
+        {{ form.name }}
+        {% for err in form.name.errors %}
+          <p class="text-xs text-red-600 mt-1">{{ err }}</p>
+        {% endfor %}
+      </div>
+
+      <div class="mb-4">
+        <label for="{{ form.mrp.id_for_label }}"
+               class="block text-sm font-medium text-gray-700 mb-1">
+          MRP
+        </label>
+        {{ form.mrp }}
+        {% for err in form.mrp.errors %}
+          <p class="text-xs text-red-600 mt-1">{{ err }}</p>
+        {% endfor %}
+      </div>
+
+      <div class="mb-4">
+        <label for="{{ form.is_active.id_for_label }}"
+               class="flex items-center gap-2 text-sm text-gray-700">
+          {{ form.is_active }}
+          Active
+        </label>
+      </div>
+
+      <button type="submit"
+              class="w-full py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-md
+                     font-medium transition">
+        {% if object %} Update Item {% else %} Create Item {% endif %}
+      </button>
+
+      <div class="mt-4 text-center">
+        <a href="{% url 'sales:item_list' %}"
+           class="text-sm text-gray-600 hover:text-gray-900 hover:underline">
+          ← Back to Item List
+        </a>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+
+{% endblock content %}

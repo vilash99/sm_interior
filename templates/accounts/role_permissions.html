@@ -1,0 +1,99 @@
+{% extends "_base.html" %}
+{% load access_tags %}
+
+{% block title %}
+Roles Permissions
+{% endblock title %}
+
+{% block page_title %}
+Role-based Permissions
+{% endblock page_title %}
+
+{% block page_subtitle %}
+Adjust which roles can access which pages, and at what level.
+{% endblock page_subtitle %}
+
+{% block page_action %}
+ {% if user|has_access:"accounts_roles:edit" %}
+    <button
+      form="role-permissions-form"
+      type="submit"
+      class="inline-flex items-center px-4 py-2 bg-gray-900 hover:bg-gray-800
+              text-white text-sm font-medium rounded-md transition"
+    >
+      Save Changes
+    </button>
+  {% endif %}
+{% endblock page_action %}
+
+{% block content %}
+<div class="py-2">
+  <form id="role-permissions-form" method="post">
+    {% csrf_token %}
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+      {% for role_value, role_label in roles %}
+
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+          <div class="px-4 py-3 border-b border-gray-200">
+            <h3 class="text-sm font-semibold text-gray-900">
+              {{ role_label }}
+            </h3>
+            <p class="text-xs text-gray-500 mt-1">
+              Permissions for the {{ role_label }} role.
+            </p>
+          </div>
+
+          <div class="p-4">
+            <table class="w-full text-sm">
+              <thead class="text-xs text-gray-500 uppercase">
+                <tr>
+                  <th class="text-left pb-2">Page</th>
+                  <th class="text-left pb-2">Access</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+
+                {% for page in pages %}
+                  {% with current=perm_map|default_if_none:'' %}
+                  <tr class="hover:bg-gray-50">
+                    <td class="py-2 pr-2 text-gray-900">
+                      {{ page.name }}
+                      <span class="text-xs text-gray-500">({{ page.code }})</span>
+                    </td>
+                    <td class="py-2">
+                      <select
+                        name="perm_{{ role_value }}_{{ page.id }}"
+                        class="w-full px-2 py-1 border border-gray-300 rounded-md
+                               bg-white text-gray-900
+                               focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400"
+                      >
+                        {% for value, label in access_types %}
+                          <option value="{{ value }}"
+                            {% if perm_map|get_item:role_value|get_item:page.id == value %}
+                              selected
+                            {% endif %}
+                          >
+                            {{ label }}
+                          </option>
+                        {% endfor %}
+                      </select>
+                    </td>
+                  </tr>
+                  {% endwith %}
+                {% endfor %}
+
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      {% endfor %}
+
+    </div>
+  </form>
+
+</div>
+
+{% endblock content %}

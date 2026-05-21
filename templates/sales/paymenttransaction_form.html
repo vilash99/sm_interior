@@ -1,0 +1,183 @@
+{% extends "_base.html" %}
+
+{% block title %}
+{% if object %} Edit Payment Transaction {% else %} Create Payment Transaction {% endif %}
+{% endblock title %}
+
+{% block page_title %}
+{% if object %} Edit Payment Transaction {% else %} Create Payment Transaction {% endif %}
+{% endblock page_title %}
+
+{% block page_subtitle %}
+Create new payment transactions and update existing ones.
+{% endblock page_subtitle %}
+
+{% block content %}
+<div class="flex justify-center items-start py-10">
+  <div class="w-full max-w-3xl bg-white shadow-sm border border-gray-200 rounded-lg p-6">
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <p class="text-red-600 text-sm mb-4">
+          {{ form.non_field_errors }}
+        </p>
+      {% endif %}
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="{{ form.invoice.id_for_label }}"
+                 class="block text-sm font-medium text-gray-700 mb-1">
+            Invoice
+          </label>
+          {{ form.invoice }}
+          {% for err in form.invoice.errors %}
+            <p class="text-xs text-red-600 mt-1">{{ err }}</p>
+          {% endfor %}
+          <p id="invoice-pending-balance"
+             class="mt-2 text-sm text-gray-600">
+            Pending balance: -
+          </p>
+        </div>
+
+        <div>
+          <label for="{{ form.payment_date.id_for_label }}"
+                 class="block text-sm font-medium text-gray-700 mb-1">
+            Payment Date
+          </label>
+          {{ form.payment_date }}
+          {% for err in form.payment_date.errors %}
+            <p class="text-xs text-red-600 mt-1">{{ err }}</p>
+          {% endfor %}
+        </div>
+
+        <div>
+          <label for="{{ form.amount.id_for_label }}"
+                 class="block text-sm font-medium text-gray-700 mb-1">
+            Amount
+          </label>
+          {{ form.amount }}
+          {% for err in form.amount.errors %}
+            <p class="text-xs text-red-600 mt-1">{{ err }}</p>
+          {% endfor %}
+          <p id="amount-limit-error"
+             class="mt-1 text-xs text-red-600 hidden">
+            Amount cannot be more than selected invoice pending balance.
+          </p>
+        </div>
+
+        <div>
+          <label for="{{ form.payment_mode.id_for_label }}"
+                 class="block text-sm font-medium text-gray-700 mb-1">
+            Payment Mode
+          </label>
+          {{ form.payment_mode }}
+          {% for err in form.payment_mode.errors %}
+            <p class="text-xs text-red-600 mt-1">{{ err }}</p>
+          {% endfor %}
+        </div>
+
+        <div>
+          <label for="{{ form.reference_number.id_for_label }}"
+                 class="block text-sm font-medium text-gray-700 mb-1">
+            Reference Number
+          </label>
+          {{ form.reference_number }}
+          {% for err in form.reference_number.errors %}
+            <p class="text-xs text-red-600 mt-1">{{ err }}</p>
+          {% endfor %}
+        </div>
+
+        <div class="md:col-span-2">
+          <label for="{{ form.notes.id_for_label }}"
+                 class="block text-sm font-medium text-gray-700 mb-1">
+            Notes
+          </label>
+          {{ form.notes }}
+          {% for err in form.notes.errors %}
+            <p class="text-xs text-red-600 mt-1">{{ err }}</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <button type="submit"
+              class="w-full mt-6 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-md font-medium transition">
+        {% if object %} Update Payment Transaction {% else %} Create Payment Transaction {% endif %}
+      </button>
+
+      <div class="mt-4 text-center">
+        <a href="{% url 'sales:paymenttransaction_list' %}"
+           class="text-sm text-gray-600 hover:text-gray-900 hover:underline">
+          Back to Payment Transaction List
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{{ invoice_pending_map|json_script:"invoice-pending-map" }}
+
+<script>
+  (function() {
+    const invoiceSelect = document.getElementById("id_invoice");
+    const amountInput = document.getElementById("id_amount");
+    const pendingBalanceText = document.getElementById("invoice-pending-balance");
+    const amountLimitError = document.getElementById("amount-limit-error");
+    const pendingMapElement = document.getElementById("invoice-pending-map");
+
+    if (!invoiceSelect || !amountInput || !pendingBalanceText || !amountLimitError || !pendingMapElement) {
+      return;
+    }
+
+    const pendingMap = JSON.parse(pendingMapElement.textContent);
+
+    function getSelectedPendingBalance() {
+      const pendingBalance = pendingMap[invoiceSelect.value];
+      return pendingBalance ? parseFloat(pendingBalance) : null;
+    }
+
+    function updatePendingBalance() {
+      const pendingBalance = getSelectedPendingBalance();
+      pendingBalanceText.textContent = pendingBalance !== null
+        ? "Pending balance for this invoice: " + pendingBalance.toFixed(2)
+        : "Pending balance: -";
+
+      if (pendingBalance !== null) {
+        amountInput.max = pendingBalance.toFixed(2);
+      } else {
+        amountInput.removeAttribute("max");
+      }
+
+      validateAmount();
+    }
+
+    function validateAmount() {
+      const pendingBalance = getSelectedPendingBalance();
+      const enteredAmount = parseFloat(amountInput.value);
+
+      if (pendingBalance !== null && !Number.isNaN(enteredAmount) && enteredAmount > pendingBalance) {
+        amountInput.setCustomValidity("Amount cannot be more than selected invoice pending balance.");
+        amountLimitError.classList.remove("hidden");
+      } else {
+        amountInput.setCustomValidity("");
+        amountLimitError.classList.add("hidden");
+      }
+    }
+
+    invoiceSelect.addEventListener("change", updatePendingBalance);
+    amountInput.addEventListener("input", validateAmount);
+    updatePendingBalance();
+  })();
+</script>
+
+<script>
+  $("#id_invoice").select2({
+    placeholder: "Select Invoice",
+    allowClear: true
+  });
+
+  $("#id_invoice").on("select2:select select2:clear", function () {
+    this.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+</script>
+{% endblock content %}

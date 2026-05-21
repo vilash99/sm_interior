@@ -1,0 +1,252 @@
+{% extends '_base.html' %}
+{% load humanize %}
+
+{% block title %}
+Dashboard
+{% endblock title %}
+
+{% block page_title %}
+Dashboard
+{% endblock page_title %}
+
+{% block page_subtitle %}
+Sales overview, payment recovery, and recent activity for the selected year.
+{% endblock page_subtitle %}
+
+{% block content %}
+<div class="space-y-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+    <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <p class="text-sm font-medium text-gray-500">Total Sales{% if selected_year %} {{ selected_year }}{% endif %}</p>
+      <p class="mt-2 text-3xl font-semibold text-gray-900">₹ {{ total_sales|floatformat:2|intcomma }}</p>
+    </div>
+
+    <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <p class="text-sm font-medium text-gray-500">Paid Amount{% if selected_year %} {{ selected_year }}{% endif %}</p>
+      <p class="mt-2 text-3xl font-semibold text-green-700">₹ {{ total_paid|floatformat:2|intcomma }}</p>
+    </div>
+
+    <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <p class="text-sm font-medium text-gray-500">Balance Amount{% if selected_year %} {{ selected_year }}{% endif %}</p>
+      <p class="mt-2 text-3xl font-semibold text-amber-700">₹ {{ total_balance|floatformat:2|intcomma }}</p>
+    </div>
+
+    <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <p class="text-sm font-medium text-gray-500">All-Time Totals</p>
+      <div class="mt-3 space-y-2 text-sm text-gray-700">
+        <p>Customers: <span class="font-semibold text-gray-900">{{ totals_all_time.customers }}</span></p>
+        <p>Invoices: <span class="font-semibold text-gray-900">{{ totals_all_time.invoices }}</span></p>
+        <p>Payments: <span class="font-semibold text-gray-900">{{ totals_all_time.payments }}</span></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <div class="xl:col-span-2 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900">Monthly Sales Trend</h2>
+          <p class="text-sm text-gray-500">Line chart for invoice sales in the selected year.</p>
+        </div>
+
+        <form method="get" class="flex items-end gap-2">
+          <div>
+            <label for="year" class="block text-xs font-medium text-gray-600 mb-1">Year</label>
+            <select id="year"
+                    name="year"
+                    onchange="this.form.submit()"
+                    class="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300">
+              {% for year in available_years %}
+                <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </form>
+      </div>
+
+      <div class="mt-5">
+        <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
+          <svg id="sales-line-chart" viewBox="0 0 760 320" class="h-80 w-full"></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <h2 class="text-lg font-semibold text-gray-900">Collection Focus</h2>
+      <p class="mt-1 text-sm text-gray-500">
+        Customers with pending balance, sorted by oldest last payment. Customers with no payment are included.
+      </p>
+
+      <div class="mt-4 space-y-3">
+        {% for customer in slow_paying_customers %}
+          <div class="rounded-lg border border-gray-200 p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="font-semibold text-gray-900">{{ customer.name }}</p>
+                <p class="mt-1 text-sm text-gray-500">
+                  Last payment:
+                  {% if customer.last_payment_date %}
+                    {{ customer.last_payment_date|date:"M d, Y" }}
+                  {% else %}
+                    No payment yet
+                  {% endif %}
+                </p>
+              </div>
+              <div class="text-right">
+                <p class="text-xs uppercase tracking-wide text-gray-500">Pending</p>
+                <p class="text-lg font-semibold text-amber-700">₹ {{ customer.pending_balance_calc|floatformat:2|intcomma }}</p>
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          <div class="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+            No pending balances found.
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+    <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900">Recent Invoices</h2>
+          <p class="mt-1 text-sm text-gray-500">Latest invoices and their current pending amounts.</p>
+        </div>
+        <a href="{% url 'sales:sell_invoice_list' %}" class="text-sm font-medium text-gray-700 hover:text-gray-900 hover:underline">
+          View all
+        </a>
+      </div>
+
+      <div class="mt-4 overflow-hidden rounded-lg border border-gray-200">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600">Invoice</th>
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600">Customer</th>
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600">Date</th>
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600">Total</th>
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-600">Pending</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 bg-white">
+            {% for invoice in recent_invoices %}
+              <tr class="hover:bg-gray-50 transition">
+                <td class="px-4 py-3 text-sm text-gray-900">
+                  <a href="{% url 'sales:sell_invoice_edit' invoice.pk %}" class="hover:underline">
+                    {{ invoice.invoice_number }}
+                  </a>
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-900">{{ invoice.customer.name }}</td>
+                <td class="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">{{ invoice.invoice_date|date:"M d, Y" }}</td>
+                <td class="px-4 py-3 text-sm text-gray-900">₹ {{ invoice.grand_total|floatformat:2|intcomma }}</td>
+                <td class="px-4 py-3 text-sm font-medium {% if invoice.pending_amount_calc > 0 %}text-amber-700{% else %}text-green-700{% endif %}">
+                  ₹ {{ invoice.pending_amount_calc|floatformat:2|intcomma }}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5" class="px-4 py-6 text-center text-sm text-gray-500">No recent invoices found.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900">Quick Summary</h2>
+          <p class="mt-1 text-sm text-gray-500">Helpful business signals from your current sales data.</p>
+        </div>
+      </div>
+
+      <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="rounded-lg bg-slate-50 p-4">
+          <p class="text-sm text-gray-500">Invoices This Year</p>
+          <p class="mt-2 text-2xl font-semibold text-gray-900">{{ invoices_this_year_count }}</p>
+          <p class="mt-1 text-xs text-gray-500">All invoices created in {{ selected_year }}.</p>
+        </div>
+
+        <div class="rounded-lg bg-slate-50 p-4">
+          <p class="text-sm text-gray-500">Customers With Pending Balance</p>
+          <p class="mt-2 text-2xl font-semibold text-gray-900">{{ slow_paying_customers|length }}</p>
+          <p class="mt-1 text-xs text-gray-500">Need follow-up for collections.</p>
+        </div>
+
+        <div class="rounded-lg bg-slate-50 p-4 sm:col-span-2">
+          <p class="text-sm text-gray-500">Best Use of This Dashboard</p>
+          <p class="mt-2 text-sm text-gray-700">
+            Use the year selector to compare monthly sales, review recent invoices for payment status,
+            and follow up first with customers who have older or no recorded payments.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ monthly_chart|json_script:"monthly-sales-chart-data" }}
+{% endblock content %}
+
+{% block js %}
+<script>
+  (function () {
+    const svg = document.getElementById("sales-line-chart");
+    const dataElement = document.getElementById("monthly-sales-chart-data");
+
+    if (!svg || !dataElement) {
+      return;
+    }
+
+    const data = JSON.parse(dataElement.textContent);
+    const width = 760;
+    const height = 320;
+    const padding = { top: 24, right: 24, bottom: 40, left: 52 };
+    const chartWidth = width - padding.left - padding.right;
+    const chartHeight = height - padding.top - padding.bottom;
+    const maxValue = Math.max(...data.map(point => point.value), 1);
+    const steps = 5;
+
+    function x(index) {
+      if (data.length === 1) return padding.left + chartWidth / 2;
+      return padding.left + (chartWidth / (data.length - 1)) * index;
+    }
+
+    function y(value) {
+      return padding.top + chartHeight - (value / maxValue) * chartHeight;
+    }
+
+    const gridLines = [];
+    for (let i = 0; i <= steps; i += 1) {
+      const value = (maxValue / steps) * i;
+      const yPos = y(value);
+      gridLines.push(`<line x1="${padding.left}" y1="${yPos}" x2="${width - padding.right}" y2="${yPos}" stroke="#e5e7eb" stroke-width="1" />`);
+      gridLines.push(`<text x="${padding.left - 10}" y="${yPos + 4}" text-anchor="end" font-size="11" fill="#6b7280">${value.toFixed(0)}</text>`);
+    }
+
+    const points = data.map((point, index) => `${x(index)},${y(point.value)}`).join(" ");
+
+    const labels = data.map((point, index) => `
+      <text x="${x(index)}" y="${height - 14}" text-anchor="middle" font-size="11" fill="#6b7280">${point.label}</text>
+    `).join("");
+
+    const circles = data.map((point, index) => `
+      <circle cx="${x(index)}" cy="${y(point.value)}" r="4" fill="#111827"></circle>
+      <text x="${x(index)}" y="${y(point.value) - 10}" text-anchor="middle" font-size="11" fill="#111827">${point.value.toFixed(0)}</text>
+    `).join("");
+
+    svg.innerHTML = `
+      <rect x="0" y="0" width="${width}" height="${height}" fill="#f9fafb" rx="12"></rect>
+      ${gridLines.join("")}
+      <line x1="${padding.left}" y1="${padding.top + chartHeight}" x2="${width - padding.right}" y2="${padding.top + chartHeight}" stroke="#9ca3af" stroke-width="1.5"></line>
+      <line x1="${padding.left}" y1="${padding.top}" x2="${padding.left}" y2="${padding.top + chartHeight}" stroke="#9ca3af" stroke-width="1.5"></line>
+      <polyline fill="none" stroke="#111827" stroke-width="3" points="${points}"></polyline>
+      ${circles}
+      ${labels}
+    `;
+  })();
+</script>
+{% endblock js %}

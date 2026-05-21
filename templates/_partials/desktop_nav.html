@@ -1,0 +1,117 @@
+{% load static %}
+
+<aside class="hidden lg:flex lg:w-72 lg:flex-col lg:bg-slate-900 lg:text-slate-100">
+  <div class="flex h-screen flex-col px-5 py-6">
+    <a href="/" class="flex items-center gap-3 border-b border-slate-800 pb-6">
+      <img src="{% static 'images/logo.png' %}" alt="staff-scheduler" class="h-10 w-auto rounded-md bg-white/95 p-1">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-sky-300">Workspace</p>
+        <p class="text-base font-semibold text-white">Staff Scheduler</p>
+      </div>
+    </a>
+
+    {% if user.is_authenticated %}
+      {% with current_view=request.resolver_match.view_name %}
+      <div class="mt-6 rounded-2xl border border-slate-800 bg-slate-800/60 p-4">
+        <p class="text-sm font-medium capitalize text-white">
+          Hi, {{ user.first_name |default:user.username }}
+        </p>
+        <div class="mt-2 inline-flex items-center rounded-full bg-sky-400/15 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-sky-200">
+          {{ user.get_role_display }}
+        </div>
+      </div>
+
+      <div class="mt-6 flex-1 space-y-6 overflow-y-auto pr-1">
+        <nav class="space-y-1 text-sm">
+          <a href="/" class="flex items-center gap-3 rounded-xl px-3 py-2.5 transition {% if current_view == 'dashboard:index' %}bg-blue-800 text-white shadow-sm{% else %}text-slate-200 hover:bg-slate-800 hover:text-white{% endif %}">
+            <i class="fa-solid fa-house w-5 text-center"></i>
+            <span>Dashboard</span>
+          </a>
+
+          <a href="{% url 'sales:sell_invoice_list' %}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 transition text-slate-200 hover:bg-slate-800 hover:text-white">
+            <i class="fa-solid fa-file-invoice w-5 text-center"></i>
+            Invoices
+          </a>
+
+          <a href="{% url 'sales:paymenttransaction_list' %}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 transition text-slate-200 hover:bg-slate-800 hover:text-white">
+            <i class="fa-solid fa-money-bill-wave w-5 text-center"></i>
+            Payments
+          </a>
+
+          <a href="{% url 'sales:customer_list' %}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 transition text-slate-200 hover:bg-slate-800 hover:text-white">
+            <i class="fa-solid fa-users w-5 text-center"></i>
+            Customers
+          </a>
+
+          <a href="{% url 'sales:item_list' %}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 transition text-slate-200 hover:bg-slate-800 hover:text-white">
+            <i class="fa-solid fa-boxes-stacked w-5 text-center"></i>
+            Items
+          </a>
+        </nav>
+
+        {% if user.is_superuser or user.role == 'SUPERUSER' or user.role == 'ADMIN' %}
+          <div class="border-t border-slate-800 pt-5">
+            <details class="group" {% if current_view == 'accounts:user_list' or current_view == 'accounts:user_add' or current_view == 'accounts:user_edit' or current_view == 'accounts:user_permissions' or current_view == 'accounts:role_permissions' or current_view == 'audit:audit_logs' %}open{% endif %}>
+              <summary class="flex cursor-pointer list-none items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800 hover:text-white [&::-webkit-details-marker]:hidden">
+                <span class="flex items-center gap-3">
+                  <i class="fa-solid fa-user-gear w-5 text-center"></i>
+                  <span>Admin</span>
+                </span>
+                <i class="fa-solid fa-chevron-down text-xs text-slate-400 transition duration-200 group-open:rotate-180"></i>
+              </summary>
+
+              <div class="ml-5 mt-2 space-y-1 border-l border-slate-800/90 pl-4 text-sm">
+                <a href="{% url 'accounts:user_list' %}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 transition {% if current_view == 'accounts:user_list' or current_view == 'accounts:user_add' or current_view == 'accounts:user_edit' or current_view == 'accounts:user_permissions' %}bg-blue-800 text-white shadow-sm{% else %}text-slate-200 hover:bg-slate-800 hover:text-white{% endif %}">
+                  <i class="fa-solid fa-users w-5 text-center"></i>
+                  <span>Account Users</span>
+                </a>
+                <a href="{% url 'accounts:role_permissions' %}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 transition {% if current_view == 'accounts:role_permissions' %}bg-blue-800 text-white shadow-sm{% else %}text-slate-200 hover:bg-slate-800 hover:text-white{% endif %}">
+                  <i class="fa-solid fa-user-shield w-5 text-center"></i>
+                  <span>Roles Permissions</span>
+                </a>
+                <a href="{% url 'audit:audit_logs' %}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 transition {% if current_view == 'audit:audit_logs' %}bg-blue-800 text-white shadow-sm{% else %}text-slate-200 hover:bg-slate-800 hover:text-white{% endif %}">
+                  <i class="fa-solid fa-clipboard-list w-5 text-center"></i>
+                  <span>Audit Logs</span>
+                </a>
+              </div>
+            </details>
+          </div>
+        {% endif %}
+
+        <div class="border-t border-slate-800 pt-5">
+          <details class="group" {% if current_view == 'accounts:profile' or current_view == 'accounts:password_change' %}open{% endif %}>
+            <summary class="flex cursor-pointer list-none items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800 hover:text-white [&::-webkit-details-marker]:hidden">
+              <span class="flex items-center gap-3">
+                <i class="fa-solid fa-circle-user w-5 text-center"></i>
+                <span>Account</span>
+              </span>
+              <i class="fa-solid fa-chevron-down text-xs text-slate-400 transition duration-200 group-open:rotate-180"></i>
+            </summary>
+
+            <div class="ml-5 mt-2 space-y-1 border-l border-slate-800/90 pl-4 text-sm">
+              <a href="{% url 'accounts:profile' %}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 transition {% if current_view == 'accounts:profile' %}bg-blue-800 text-white shadow-sm{% else %}text-slate-200 hover:bg-slate-800 hover:text-white{% endif %}">
+                <i class="fa-solid fa-user w-5 text-center"></i>
+                <span>Profile</span>
+              </a>
+              <a href="{% url 'accounts:password_change' %}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 transition {% if current_view == 'accounts:password_change' %}bg-blue-800 text-white shadow-sm{% else %}text-slate-200 hover:bg-slate-800 hover:text-white{% endif %}">
+                <i class="fa-solid fa-key w-5 text-center"></i>
+                <span>Change Password</span>
+              </a>
+              <a href="{% url 'accounts:logout' %}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-rose-200 transition hover:bg-rose-500/10 hover:text-white">
+                <i class="fa-solid fa-right-from-bracket w-5 text-center"></i>
+                <span>Log Out</span>
+              </a>
+            </div>
+          </details>
+        </div>
+      </div>
+      {% endwith %}
+    {% else %}
+      <div class="mt-6">
+        <a href="{% url 'accounts:login' %}" class="flex items-center justify-center rounded-xl bg-sky-400 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-sky-300">
+          Log In
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</aside>

@@ -1,0 +1,122 @@
+{% extends "_base.html" %}
+
+{% block title %}
+Profile
+{% endblock title %}
+
+{% block page_title %}
+Profile
+{% endblock page_title %}
+
+{% block page_subtitle %}
+Your information and permission summary
+{% endblock page_subtitle %}
+
+{% block content %}
+<div class="items-start py-3">
+  <div class="bg-white shadow-sm border border-gray-200 rounded-lg p-6">
+
+    <!-- Profile Info -->
+    <div class="space-y-4">
+
+      <div class="flex items-center gap-4">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900">
+            {{ user_obj.first_name }} {{ user_obj.last_name }}
+          </h3>
+          <p class="text-sm text-gray-500">@{{ user_obj.username }}</p>
+        </div>
+
+        <span class="ml-auto inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
+                     bg-rose-100 text-rose-700">
+          {{ user_obj.get_role_display }}
+        </span>
+      </div>
+
+      <hr class="border-gray-200">
+
+      <!-- Details -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+
+        <div>
+          <p class="text-gray-500">Email</p>
+          <p class="text-gray-900">{{ user_obj.email|default:"—" }}</p>
+        </div>
+
+        <div>
+          <p class="text-gray-500">Created At</p>
+          <p class="text-gray-900">
+            {{ user_obj.created_at|date:"M d, Y h:i A" }}
+          </p>
+        </div>
+
+        <div>
+          <p class="text-gray-500">Updated At</p>
+          <p class="text-gray-900">
+            {{ user_obj.updated_at|date:"M d, Y h:i A" }}
+          </p>
+        </div>
+
+        <div>
+          <p class="text-gray-500">Created By</p>
+          <p class="text-gray-900">
+            {{ user_obj.created_by.username|default:"—" }}
+          </p>
+        </div>
+
+      </div>
+
+      <hr class="border-gray-200">
+
+      <!-- Users Created By This User -->
+      <div class="mt-4">
+        <h3 class="text-md font-semibold text-gray-900 mb-2">
+          Users You Created
+        </h3>
+
+        {% if created_users %}
+          <ul class="space-y-2">
+            {% for u in created_users %}
+              <li class="p-3 border border-gray-200 rounded-md bg-gray-50">
+                <div class="flex justify-between items-center">
+                  <div>
+                    <p class="font-medium text-gray-900">{{ u.username }}</p>
+                    <p class="text-xs text-gray-500">{{ u.get_role_display }}</p>
+                  </div>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-sm text-gray-500">You haven't created any users.</p>
+        {% endif %}
+      </div>
+
+      <hr class="border-gray-200">
+
+      <!-- Permission Summary -->
+      <div class="mt-4">
+        <h3 class="text-md font-semibold text-gray-900 mb-2">
+          Permission Summary
+        </h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {% for page, perms in permission_items %}
+            <div class="p-3 border border-gray-200 rounded-md bg-gray-50">
+              <p class="font-semibold text-gray-900">{{ page|title }}</p>
+              <p class="text-xs text-gray-500">
+                View: {{ perms.view|yesno:"Yes,No" }} |
+                Edit: {{ perms.edit|yesno:"Yes,No" }} |
+                Full: {{ perms.full|yesno:"Yes,No" }}
+              </p>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+{% endblock content %}

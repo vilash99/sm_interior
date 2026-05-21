@@ -1,0 +1,62 @@
+{% load querystring %}
+
+{% if is_paginated %}
+  <nav aria-label="Pagination" class="mt-6 flex items-center justify-between">
+
+    <!-- Left side -->
+    <div class="flex items-center gap-2">
+      {% if page_obj.has_previous %}
+        <a href="?{% qs page=1 %}"
+           class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5
+                  text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
+          « First
+        </a>
+        <a href="?{% qs page=page_obj.previous_page_number %}"
+           class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5
+                  text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
+          ‹ Prev
+        </a>
+      {% else %}
+        <span class="inline-flex items-center rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5
+                     text-sm font-medium text-gray-400 cursor-not-allowed">
+          « First
+        </span>
+        <span class="inline-flex items-center rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5
+                     text-sm font-medium text-gray-400 cursor-not-allowed">
+          ‹ Prev
+        </span>
+      {% endif %}
+    </div>
+
+    <!-- Center indicator -->
+    <div class="text-sm font-medium text-gray-600">
+      Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </div>
+
+    <!-- Right side -->
+    <div class="flex items-center gap-2">
+      {% if page_obj.has_next %}
+        <a href="?{% qs page=page_obj.next_page_number %}"
+           class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5
+                  text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
+          Next ›
+        </a>
+        <a href="?{% qs page=page_obj.paginator.num_pages %}"
+           class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5
+                  text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition">
+          Last »
+        </a>
+      {% else %}
+        <span class="inline-flex items-center rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5
+                     text-sm font-medium text-gray-400 cursor-not-allowed">
+          Next ›
+        </span>
+        <span class="inline-flex items-center rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5
+                     text-sm font-medium text-gray-400 cursor-not-allowed">
+          Last »
+        </span>
+      {% endif %}
+    </div>
+
+  </nav>
+{% endif %}

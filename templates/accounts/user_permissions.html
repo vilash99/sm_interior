@@ -1,0 +1,101 @@
+{% extends "_base.html" %}
+{% load access_tags %}
+
+{% block title %}
+User Permissions
+{% endblock title %}
+
+{% block content %}
+
+<div class="py-2">
+
+  <!-- Header -->
+  <div class="mb-6 flex items-center justify-between">
+    <div>
+      <h2 class="text-2xl font-semibold text-gray-900">
+        Permissions for {{ target_user.username }}
+      </h2>
+      <p class="mt-1 text-sm text-gray-600">
+        Set per-page overrides. “Inherit” will use the role-based default permission.
+      </p>
+    </div>
+
+    <a href="{% url 'accounts:user_list' %}"
+       class="text-sm text-gray-600 hover:text-gray-900 hover:underline">
+      ← Back to User List
+    </a>
+  </div>
+
+  <!-- Form -->
+  <form method="post"
+        class="bg-white border border-gray-200 rounded-lg shadow-sm">
+    {% csrf_token %}
+
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 text-xs">
+        <tr>
+          <th class="text-left px-4 py-2 text-gray-600">Page</th>
+          <th class="text-left px-4 py-2 text-gray-600">Role Default</th>
+          <th class="text-left px-4 py-2 text-gray-600">Override</th>
+        </tr>
+      </thead>
+
+      <tbody class="divide-y divide-gray-200 bg-white">
+        {% for page in pages %}
+          {% with override=user_permissions|get_item:page.code %}
+            {% with default=role_defaults|get_item:page.code %}
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-2 text-gray-900">
+                  {{ page.name }}
+                  <span class="text-xs text-gray-500">({{ page.code }})</span>
+                </td>
+
+                <td class="px-4 py-2 text-gray-600">
+                  {% if default %}
+                    {{ default|capfirst }}
+                  {% else %}
+                    <span class="italic text-gray-500">No role default (denied)</span>
+                  {% endif %}
+                </td>
+
+                <td class="px-4 py-2">
+                  <select
+                    name="perm_{{ page.id }}"
+                    class="w-full max-w-xs px-2 py-1 border border-gray-300 rounded-md
+                           bg-white text-gray-900
+                           focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400"
+                  >
+                    <option value="inherit"
+                      {% if not override %}selected{% endif %}
+                    >
+                      Inherit ({{ default|default:"denied" }})
+                    </option>
+
+                    {% for value, label in access_types %}
+                      <option value="{{ value }}"
+                        {% if override and override.access_type == value %}selected{% endif %}
+                      >
+                        {{ label }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </td>
+              </tr>
+            {% endwith %}
+          {% endwith %}
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="flex justify-end px-4 py-3 border-t border-gray-200">
+      <button type="submit"
+              class="inline-flex items-center px-4 py-2 bg-gray-900 hover:bg-gray-800
+                     text-white text-sm font-medium rounded-md transition">
+        Save Changes
+      </button>
+    </div>
+  </form>
+
+</div>
+
+{% endblock content %}

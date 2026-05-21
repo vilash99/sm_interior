@@ -1,0 +1,109 @@
+{% load static %}
+{% load access_tags %}
+
+<!DOCTYPE html>
+<html lang="en" class="bg-gray-100 text-gray-900">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Staff Scheduler - {% block title %}{% endblock title %}</title>
+
+  <!-- TailwindCSS via CDN -->
+  <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+  <link rel="stylesheet" href="{% static 'css/output.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+
+  <link rel="stylesheet" href="{% static 'css/select2.min.css' %}">
+  <script src="{% static 'js/select2.min.js' %}"></script>
+
+  {% block css %}
+  {% endblock css %}
+</head>
+<body class="min-h-screen bg-gray-100 text-gray-900">
+  <div class="min-h-screen lg:flex">
+    {% include '_partials/desktop_nav.html' %}
+
+    <div class="flex min-h-screen flex-1 flex-col">
+      <header class="sticky top-0 z-30 border-b border-gray-200 bg-white/95 backdrop-blur lg:hidden">
+        <div class="flex h-16 items-center justify-between px-4 sm:px-6">
+          <a href="/" class="flex items-center gap-3">
+            <img src="{% static 'images/logo.png' %}" alt="staff-scheduler" class="h-8 w-auto">
+            <span class="text-sm font-semibold text-slate-900">
+              Staff Scheduler
+            </span>
+          </a>
+
+          <button type="button"
+                  id="nav-toggle"
+                  class="inline-flex items-center justify-center rounded-md border border-slate-200 p-2 text-slate-700 transition hover:bg-slate-100 focus:outline-none"
+                  aria-controls="mobile-menu"
+                  aria-expanded="false">
+            <span class="sr-only">Open sidebar menu</span>
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
+
+        {% include '_partials/mobile_nav.html' %}
+      </header>
+
+      {% include '_partials/flash_messages.html' %}
+
+      <main class="flex-1 w-full">
+        <div class="mx-auto w-full max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8">
+
+           <!-- Header -->
+          <div class="mb-6 border-b border-gray-200 pb-4 flex items-center justify-between">
+            <div>
+              <h1 class="text-2xl font-semibold text-gray-900">
+                {% block page_title %}{% endblock page_title %}
+              </h1>
+
+              <p class="mt-1 text-sm text-gray-600">
+                {% block page_subtitle %}{% endblock page_subtitle %}
+              </p>
+            </div>
+
+            {% block page_action %}{% endblock page_action %}
+          </div>
+
+
+          {% block content %}
+          {% endblock content %}
+        </div>
+      </main>
+
+      <footer class="border-t border-gray-200 bg-white">
+        <div class="mx-auto w-full max-w-screen-2xl px-4 py-4 sm:px-6 lg:px-8">
+          <p class="text-center text-xs text-gray-600">
+            &copy; <span id="current-year"></span> VPK Technologies. All rights reserved.
+            <span class="mx-1">&bull;</span>
+            Designed &amp; Developed by
+            <a
+              href="https://www.vpktechnologies.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-medium text-gray-900 hover:underline"
+            >
+              VPK Technologies
+            </a>
+          </p>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script src="{% static 'js/base.js' %}"></script>
+
+  {% block js %}
+  {% endblock js %}
+
+  <script>
+    document.getElementById("current-year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

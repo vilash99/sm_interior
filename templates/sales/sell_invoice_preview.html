@@ -1,0 +1,376 @@
+{% load humanize sales_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice {{ invoice.invoice_number }}</title>
+  <style>
+    :root {
+      color-scheme: light;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      color: #111111;
+    }
+
+    .page {
+      max-width: 21cm;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .toolbar-text h2 {
+      margin: 0 0 4px;
+      font-size: 22px;
+    }
+
+    .toolbar-text p {
+      margin: 0;
+      color: #4b5563;
+      font-size: 13px;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 14px;
+      border: 1px solid #9ca3af;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #111827;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: #111827;
+      border-color: #111827;
+      color: #ffffff;
+    }
+
+    .sheet {
+      background: #ffffff;
+      border: 1px solid #000000;
+      padding: 10px 12px 12px;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .header-table td {
+      border: 1px solid #000000;
+      text-align: center;
+      padding: 8px 10px;
+    }
+
+    .header-table h4 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      text-decoration: underline;
+    }
+
+    .header-table h2 {
+      margin: 4px 0 2px;
+      font-size: 20px;
+      font-weight: 700;
+
+    }
+
+    .header-table p {
+      margin: 0;
+      font-size: 13px;
+    }
+
+    .party-table {
+      margin-top: 6px;
+    }
+
+    .party-table td {
+      border: 1px solid #000000;
+      vertical-align: top;
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+
+    .party-label {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .party-name {
+      font-weight: 700;
+      font-size: 16px;
+      margin-top: 2px;
+    }
+
+    .meta-table {
+      width: 100%;
+    }
+
+    .meta-table td {
+      border: 0;
+      padding: 1px 0;
+      font-size: 13px;
+    }
+
+    .meta-key {
+      width: 42%;
+      white-space: nowrap;
+    }
+
+    .meta-sep {
+      width: 8%;
+      text-align: center;
+    }
+
+    .meta-val {
+      font-weight: 700;
+    }
+
+    .items-table {
+      margin-top: 6px;
+      table-layout: fixed;
+    }
+
+    .items-table th,
+    .items-table td {
+      border: 1px solid #000000;
+      padding: 4px 5px;
+      font-size: 12px;
+    }
+
+    .items-table th {
+      text-align: left;
+      font-weight: 700;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .right {
+      text-align: right !important;
+      white-space: nowrap;
+    }
+
+    .items-table .description {
+      width: 38%;
+    }
+
+    .items-table .qty {
+      width: 12%;
+    }
+
+    .items-table .unit {
+      width: 10%;
+    }
+
+    .items-table .price,
+    .items-table .amount {
+      width: 17%;
+    }
+
+    .summary-table {
+      margin-top: 0;
+      table-layout: fixed;
+    }
+
+    .summary-table td {
+      border: 1px solid #000000;
+      padding: 6px 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .amount-words {
+      margin-top: 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    @page {
+      size: 21cm 15cm;
+      margin: 0.7cm;
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+
+      .page {
+        width: 19.6cm;
+        min-height: 13.6cm;
+        max-width: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .toolbar {
+        display: none;
+      }
+
+      .sheet {
+        border: 1px solid #000000;
+        padding: 6px;
+      }
+
+      .header-table h3 {
+        font-size: 18px;
+      }
+
+      .header-table h2 {
+        font-size: 20px;
+        letter-spacing: 2px;
+      }
+
+      .header-table p,
+      .party-table td,
+      .meta-table td,
+      .summary-table td,
+      .amount-words {
+        font-size: 12px;
+      }
+
+      .party-name {
+        font-size: 14px;
+      }
+
+      .items-table th,
+      .items-table td {
+        padding: 3px 4px;
+        font-size: 11px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  {% get_shop_detail as shop_detail %}
+  <div class="page">
+    <div class="toolbar">
+      <div class="toolbar-text">
+        <h2>Invoice Preview</h2>
+        <p>Review the invoice, then print using your browser.</p>
+      </div>
+
+      <div class="toolbar-actions">
+        <a href="{% url 'sales:sell_invoice_edit' invoice.pk %}" class="btn">Back to Invoice</a>
+        <button type="button" class="btn btn-primary" onclick="window.print()">Print Invoice</button>
+      </div>
+    </div>
+
+    <div class="sheet">
+      <table class="header-table">
+        <tr>
+          <td>
+            <h4>Invoice</h4>
+            <h2>{{ shop_detail.shop_name|default:"Shop Name" }}</h2>
+            <p>{{ shop_detail.full_address|default:"Shop Address" }}</p>
+          </td>
+        </tr>
+      </table>
+
+      <table class="party-table">
+        <tr>
+          <td style="width: 52%;">
+            <div class="party-label">Party Details :</div>
+            <div class="party-name">{{ invoice.customer.name }}</div>
+          </td>
+          <td style="width: 48%;">
+            <table class="meta-table">
+              <tr>
+                <td class="meta-key">Invoice No.</td>
+                <td class="meta-sep">:</td>
+                <td class="meta-val">{{ invoice.invoice_number }}</td>
+              </tr>
+              <tr>
+                <td class="meta-key">Dated</td>
+                <td class="meta-sep">:</td>
+                <td class="meta-val">{{ invoice.invoice_date|date:"d-m-Y" }}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th class="center" style="width: 6%;">S.N.</th>
+            <th class="description">Description of Goods</th>
+            <th class="qty right" style="width: 8%;">Qty.</th>
+            <th class="unit" style="width: 6%;">Unit</th>
+            <th class="price right">Price</th>
+            <th class="amount right">Amount(₹)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for invoice_item in invoice_items %}
+            <tr>
+              <td class="center">{{ forloop.counter }}.</td>
+              <td>{{ invoice_item.item.name }}</td>
+              <td class="right">{{ invoice_item.quantity }}</td>
+              <td>Pcs</td>
+              <td class="right">{{ invoice_item.price|floatformat:2|intcomma }}</td>
+              <td class="right">{{ invoice_item.line_total|floatformat:2|intcomma }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="center">No invoice items added yet.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <table class="summary-table">
+        <tr>
+          <td style="width: 52%; border-right: 0;"></td>
+          <td style="width: 16%; text-align: right; border-left: 0;">Grand Total</td>
+          <td style="width: 10%; text-align: center;">{{ total_quantity }} Pcs</td>
+          <td style="width: 16%; text-align: right;">₹ {{ invoice.grand_total|floatformat:2|intcomma }}</td>
+        </tr>
+      </table>
+
+      <div class="amount-words">
+        {{ amount_in_words }}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

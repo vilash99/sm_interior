@@ -19,6 +19,9 @@ class ItemForm(forms.ModelForm):
 
 
 class CustomerForm(forms.ModelForm):
+    def clean_name(self):
+        return self.cleaned_data["name"].upper()
+
     class Meta:
         model = Customer
         fields = ["name", "contact_number", "address", "is_active"]

@@ -10,6 +10,9 @@ from common.models import TimeStampedModel
 class ShopDetail(TimeStampedModel):
     shop_name = models.CharField(max_length=200)
     full_address = models.TextField()
+    upi_id = models.CharField("UPI ID", max_length=255, blank=True)
+    show_upi = models.BooleanField("Show UPI QR code", default=True)
+    show_logo = models.BooleanField("Show logo", default=False)
 
     class Meta:
         verbose_name = "Shop Detail"

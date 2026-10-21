@@ -5,7 +5,7 @@ from .models import Customer, Item, PaymentTransaction, SellInvoice, SellInvoice
 
 @admin.register(ShopDetail)
 class ShopDetailAdmin(admin.ModelAdmin):
-    list_display = ("shop_name", "created_at")
+    list_display = ("shop_name", "upi_id", "show_upi", "show_logo", "created_at")
     search_fields = ("shop_name", "full_address")
     ordering = ("-id",)
 

@@ -1,9 +1,17 @@
+from base64 import b64encode
+from datetime import date
 from decimal import Decimal
+from urllib.parse import quote, urlencode
+
+import qrcode
+from qrcode.image.svg import SvgPathFillImage
 
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect
 from django.db.models import Q, Sum
 from django.urls import reverse_lazy
+from django.utils import timezone
+from django.utils.functional import cached_property
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from audit.models import log_action
@@ -18,7 +26,7 @@ from .forms import (
     SellInvoiceForm,
     SellInvoiceItemForm,
 )
-from .models import Customer, Item, PaymentTransaction, SellInvoice, SellInvoiceItem
+from .models import Customer, Item, PaymentTransaction, SellInvoice, SellInvoiceItem, ShopDetail
 
 
 class ItemListView(PageAccessRequiredMixin, ListView):
@@ -201,15 +209,31 @@ class CustomerUpdateView(PageAccessRequiredMixin, FormInvalidMessageMixin, Updat
 
 class PaymentTransactionListView(PageAccessRequiredMixin, ListView):
     model = PaymentTransaction
-    template_name = "sales/paymenttransaction_list.html"
+    template_name = "sales/payment_transaction_list.html"
     context_object_name = "payments"
     paginate_by = 25
 
     page_code = "app_payments"
     access_type = "view"
 
+    @cached_property
+    def date_filters(self):
+        today = timezone.localdate()
+        dates = {}
+        for name in ("start_date", "end_date"):
+            value = self.request.GET.get(name, "").strip()
+            try:
+                dates[name] = date.fromisoformat(value)
+            except ValueError:
+                dates[name] = today
+        return dates
+
     def get_queryset(self):
         queryset = super().get_queryset().select_related("customer", "invoice")
+        queryset = queryset.filter(
+            payment_date__gte=self.date_filters["start_date"],
+            payment_date__lte=self.date_filters["end_date"],
+        )
         search_query = self.request.GET.get("q", "").strip()
 
         if search_query:
@@ -225,13 +249,14 @@ class PaymentTransactionListView(PageAccessRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["search_query"] = self.request.GET.get("q", "").strip()
+        context.update({name: value.isoformat() for name, value in self.date_filters.items()})
         return context
 
 
 class PaymentTransactionCreateView(PageAccessRequiredMixin, FormInvalidMessageMixin, CreateView):
     model = PaymentTransaction
     form_class = PaymentTransactionForm
-    template_name = "sales/paymenttransaction_form.html"
+    template_name = "sales/payment_transaction_form.html"
 
     page_code = "app_payments"
     access_type = "edit"
@@ -269,7 +294,7 @@ class PaymentTransactionCreateView(PageAccessRequiredMixin, FormInvalidMessageMi
 class PaymentTransactionUpdateView(PageAccessRequiredMixin, FormInvalidMessageMixin, UpdateView):
     model = PaymentTransaction
     form_class = PaymentTransactionForm
-    template_name = "sales/paymenttransaction_form.html"
+    template_name = "sales/payment_transaction_form.html"
 
     page_code = "app_payments"
     access_type = "edit"
@@ -424,6 +449,24 @@ class SellInvoicePreviewView(PageAccessRequiredMixin, DetailView):
         context["invoice_items"] = invoice_items
         context["total_quantity"] = total_quantity
         context["amount_in_words"] = amount_to_indian_words(self.object.grand_total)
+
+        shop_detail = ShopDetail.objects.order_by("-id").first()
+
+        context["shop_detail"] = shop_detail
+        upi_id = shop_detail.upi_id.strip() if shop_detail else ""
+
+        if shop_detail and shop_detail.show_upi and upi_id and self.object.grand_total > 0:
+            payment_uri = "upi://pay?" + urlencode({
+                "pa": upi_id,
+                "pn": shop_detail.shop_name,
+                "tr": self.object.invoice_number,
+                "am": format(self.object.grand_total, ".2f"),
+                "cu": "INR",
+            }, quote_via=quote)
+            qr_image = qrcode.make(payment_uri, image_factory=SvgPathFillImage, border=4)
+            svg_data = b64encode(qr_image.to_string()).decode("ascii")
+            context["upi_qr_code"] = f"data:image/svg+xml;base64,{svg_data}"
+            context["upi_id"] = upi_id
         return context
 
 

@@ -1,4 +1,4 @@
-{% load humanize sales_tags %}
+{% load humanize static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -110,6 +110,38 @@
       font-size: 13px;
     }
 
+    .header-table .shop-logo {
+      width: 32mm;
+      padding: 4px;
+      vertical-align: middle;
+    }
+
+    .shop-logo img {
+      display: block;
+      width: 25mm;
+      height: 25mm;
+      object-fit: contain;
+      margin: 0 auto;
+    }
+
+    .header-table .payment-qr {
+      width: 38mm;
+      padding: 4px;
+      vertical-align: middle;
+    }
+
+    .payment-qr img {
+      display: block;
+      width: 25mm;
+      height: 25mm;
+      margin: 0 auto;
+    }
+
+    .header-table .payment-qr p {
+      font-size: 10px;
+      overflow-wrap: anywhere;
+    }
+
     .party-table {
       margin-top: 6px;
     }
@@ -218,7 +250,7 @@
     }
 
     @page {
-      size: 21cm 15cm;
+      size: A5 portrait;
       margin: 0.7cm;
     }
 
@@ -228,9 +260,9 @@
       }
 
       .page {
-        width: 19.6cm;
-        min-height: 13.6cm;
+        width: 100%;
         max-width: none;
+        min-height: 0;
         margin: 0;
         padding: 0;
       }
@@ -281,7 +313,6 @@
   </style>
 </head>
 <body>
-  {% get_shop_detail as shop_detail %}
   <div class="page">
     <div class="toolbar">
       <div class="toolbar-text">
@@ -298,11 +329,22 @@
     <div class="sheet">
       <table class="header-table">
         <tr>
+          {% if shop_detail.show_logo %}
+          <td class="shop-logo">
+            <img src="{% static 'images/logo.png' %}" alt="{{ shop_detail.shop_name }} logo">
+          </td>
+          {% endif %}
           <td>
             <h4>Invoice</h4>
             <h2>{{ shop_detail.shop_name|default:"Shop Name" }}</h2>
             <p>{{ shop_detail.full_address|default:"Shop Address" }}</p>
           </td>
+          {% if shop_detail.show_upi and upi_qr_code %}
+          <td class="payment-qr">
+            <img src="{{ upi_qr_code }}" alt="UPI payment QR code for invoice {{ invoice.invoice_number }}">
+            <p><strong>Scan to pay with UPI</strong></p>
+          </td>
+          {% endif %}
         </tr>
       </table>
 

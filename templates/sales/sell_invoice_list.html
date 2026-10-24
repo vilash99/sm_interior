@@ -9,10 +9,6 @@ Sell Invoices
 Sell Invoices
 {% endblock page_title %}
 
-{% block page_subtitle %}
-List of all sell invoices with customer and date filters.
-{% endblock page_subtitle %}
-
 {% block page_action %}
   <a href="{% url 'sales:sell_invoice_add' %}"
     class="inline-flex items-center px-4 py-2 bg-gray-900 hover:bg-gray-800
@@ -22,9 +18,9 @@ List of all sell invoices with customer and date filters.
 {% endblock page_action %}
 
 {% block content %}
-<div class="py-2">
+<div class="space-y-2">
   <form method="get"
-        class="mb-4 grid grid-cols-1 md:grid-cols-5 gap-3 bg-white border border-gray-200 rounded-lg p-4">
+        class="mb-2 grid grid-cols-1 md:grid-cols-5 gap-3 bg-white border border-gray-200 rounded-lg p-4">
     <div class="md:col-span-2">
       <label class="block text-xs font-medium text-gray-600 mb-1">Search Customer</label>
       <input type="text"
